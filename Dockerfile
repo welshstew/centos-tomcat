@@ -1,28 +1,20 @@
-# Centos based container with Java and Tomcat
-FROM centos:centos7
-MAINTAINER kirillf
+FROM registry.access.redhat.com/jboss-fuse-6/fis-java-openshift:latest
 
-# Install prepare infrastructure
+USER root
+
 RUN yum -y update && \
 	yum -y install wget && \
 	yum -y install tar 
 
 # Prepare environment 
-ENV JAVA_HOME /opt/java
 ENV CATALINA_HOME /opt/tomcat 
 ENV PATH $PATH:$JAVA_HOME/bin:$CATALINA_HOME/bin:$CATALINA_HOME/scripts
 
-# Install Oracle Java7
-RUN wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" \
-	http://download.oracle.com/otn-pub/java/jdk/7u71-b14/jdk-7u71-linux-x64.tar.gz && \
-	tar -xvf jdk-7u71-linux-x64.tar.gz && \
-	rm jdk*.tar.gz && \
-	mv jdk* ${JAVA_HOME}
-
+#http://mirror.catn.com/pub/apache/tomcat/tomcat-8/v8.0.33/bin/apache-tomcat-8.0.33.zip
 
 # Install Tomcat
-RUN wget http://apache-mirror.rbc.ru/pub/apache/tomcat/tomcat-8/v8.0.15/bin/apache-tomcat-8.0.15.tar.gz && \
-	tar -xvf apache-tomcat-8.0.15.tar.gz && \
+RUN wget http://mirror.catn.com/pub/apache/tomcat/tomcat-8/v8.0.33/bin/apache-tomcat-8.0.33.zip && \
+	tar -xvf apache-tomcat-8.0.33.tar.gz && \
 	rm apache-tomcat*.tar.gz && \
 	mv apache-tomcat* ${CATALINA_HOME} 
 
@@ -34,15 +26,12 @@ ADD tomcat.sh $CATALINA_HOME/scripts/tomcat.sh
 RUN chmod +x $CATALINA_HOME/scripts/*.sh
 
 # Create tomcat user
-RUN groupadd -r tomcat && \
-	useradd -g tomcat -d ${CATALINA_HOME} -s /sbin/nologin  -c "Tomcat user" tomcat && \
-	chown -R tomcat:tomcat ${CATALINA_HOME}
+RUN useradd -g jboss -d ${CATALINA_HOME} -s /sbin/nologin  -c "Tomcat user" jboss && \
+	chown -R jboss:jboss ${CATALINA_HOME}
 
-WORKDIR /opt/tomcat
 
 EXPOSE 8080
 EXPOSE 8009
 
-
-USER tomcat
+USER jboss
 CMD ["tomcat.sh"]
